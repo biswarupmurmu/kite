@@ -22,7 +22,6 @@ class Kite:
                 if func_args_names:
                     func_args[func_args_names[0]] = req
 
-                print(path_params, func_args_names)
 
                 # func_args.update(path_params)
                 for key in path_params:
