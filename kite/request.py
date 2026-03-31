@@ -16,8 +16,8 @@ class Request:
     def _parse_headers(self, raw_headers):
         headers = {}
         for key, value in raw_headers:
-            key_str = key.decode("latin-1").lower()
-            val_str = value.decode("latin-1")
+            key_str = key.decode("utf-8").lower()
+            val_str = value.decode("utf-8")
             headers[key_str] = val_str
         return headers
 
