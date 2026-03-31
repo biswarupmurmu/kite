@@ -1,7 +1,9 @@
 class RouteNode:
     def __init__(self, path_segment: str) -> None:
         self.path_segment = path_segment
-        # get, post, put and others will be key and the handler is value
+        # get, post, put and others will be key and value is a dict
+        # in this dict: key 1 is the handler and its value is handler function
+        # key 2 is middleware and its value is list of middleware functions
         self.methods = {}
         # the child routes, path_segment is the key and value is RouteNode object
         self.children = {}
@@ -9,7 +11,9 @@ class RouteNode:
         self.is_param = path_segment.startswith("{") and path_segment.endswith("}")
         self.param_name = path_segment[1:-1] if self.is_param else None
 
-    def register(self, path: str, method: str, method_handler) -> RouteNode:
+    def register(
+        self, path: str, method: str, method_handler, middleware: list = []
+    ) -> RouteNode:
         current_node = self
         segments = path.split("/")
 
@@ -17,13 +21,16 @@ class RouteNode:
             if segment not in current_node.children:
                 current_node.children[segment] = RouteNode(path_segment=segment)
             current_node = current_node.children[segment]
-        current_node.methods[method] = method_handler
+        current_node.methods[method] = {
+            "handler": method_handler,
+            "middleware": middleware,
+        }
         return current_node
 
     def get_handler(self, path: str, method: str):
         current_node = self
         segments = path.split("/")
-        extracted_params = {}
+        path_params = {}
 
         for segment in segments:
             if segment in current_node.children:
@@ -39,8 +46,8 @@ class RouteNode:
                 )
                 if param_node:
                     current_node = param_node
-                    extracted_params[param_node.param_name] = segment
+                    path_params[param_node.param_name] = segment
                 else:
                     return None, {}
-        handler = current_node.methods.get(method, None)
-        return handler, extracted_params
+        handler_middleware = current_node.methods.get(method, None)
+        return handler_middleware, path_params

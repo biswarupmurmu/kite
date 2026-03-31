@@ -10,7 +10,7 @@ class Kite:
     def __init__(self) -> None:
         self.root = RouteNode("")
 
-    def route(self, path, method):
+    def route(self, path: str, method: str, middleware: list):
         def decorator(func):
             sig = inspect.signature(func)
 
@@ -22,7 +22,6 @@ class Kite:
                 if func_args_names:
                     func_args[func_args_names[0]] = req
 
-
                 # func_args.update(path_params)
                 for key in path_params:
                     if key in func_args_names:
@@ -32,7 +31,9 @@ class Kite:
                     return await func(**func_args)
                 return func(**func_args)
 
-            self.root.register(path=path, method=method, method_handler=handler)
+            self.root.register(
+                path=path, method=method, method_handler=handler, middleware=middleware
+            )
 
             # maybe it doesnot matter which function i return here
             # as this function is never going to be executed
@@ -41,23 +42,23 @@ class Kite:
 
         return decorator
 
-    def get(self, path):
-        return self.route(path=path, method="GET")
+    def get(self, path: str, middleware: list = []):
+        return self.route(path=path, method="GET", middleware=middleware)
 
-    def post(self, path):
-        return self.route(path=path, method="POST")
+    def post(self, path: str, middleware: list = []):
+        return self.route(path=path, method="POST", middleware=middleware)
 
-    def put(self, path):
-        return self.route(path=path, method="PUT")
+    def put(self, path: str, middleware: list = []):
+        return self.route(path=path, method="PUT", middleware=middleware)
 
-    def delete(self, path):
-        return self.route(path=path, method="DELETE")
+    def delete(self, path: str, middleware: list = []):
+        return self.route(path=path, method="DELETE", middleware=middleware)
 
-    def patch(self, path):
-        return self.route(path=path, method="PATCH")
+    def patch(self, path: str, middleware: list = []):
+        return self.route(path=path, method="PATCH", middleware=middleware)
 
-    def options(self, path):
-        return self.route(path=path, method="OPTIONS")
+    def options(self, path: str, middleware: list = []):
+        return self.route(path=path, method="OPTIONS", middleware=middleware)
 
     async def read_body(self, receive):
         body = b""
@@ -76,15 +77,45 @@ class Kite:
         method = scope["method"]
         body = await self.read_body(receive)
 
-        handler, params = self.root.get_handler(path=path, method=method)
+        handler_middleware, path_params = self.root.get_handler(
+            path=path, method=method
+        )
+
+        if not handler_middleware:
+            response_body = Response({"message": "not found"}, status_code=404)
+            await response_body.send(send)
+            return
 
         req = Request(scope, body)
+        handler = handler_middleware["handler"]
+        middleware = handler_middleware["middleware"]
 
-        if handler:
-            response_body = await handler(req, params)
-            if not isinstance(response_body, Response):
-                response_body = Response(response_body)
-        else:
-            response_body = Response({"message": "not found"}, status_code=404)
+        for mw in middleware:
 
+            sig = inspect.signature(mw)
+            mw_args_names = list(sig.parameters.keys())
+            mw_args = {}
+            if mw_args_names:
+                mw_args[mw_args_names[0]] = req
+
+            if inspect.iscoroutinefunction(mw):
+                mw_response = await mw(**mw_args)
+            else:
+                mw_response = mw(**mw_args)
+
+            # updating the req with whatever Request instance the
+            # middleware returns
+            if isinstance(mw_response, Request):
+                req = mw_response
+            else:
+                # maybe the developer wants to stop here
+                # try to return whatever the middleware returns to the client
+                if not isinstance(mw_response, Response):
+                    mw_response = Response(mw_response)
+                await mw_response.send(send)
+                return
+
+        response_body = await handler(req, path_params)
+        if not isinstance(response_body, Response):
+            response_body = Response(response_body)
         await response_body.send(send)
