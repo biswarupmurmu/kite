@@ -1,6 +1,7 @@
 import inspect
 from functools import wraps
 
+from kite.fileresponse import FileResponse
 from kite.request import Request
 from kite.response import Response
 from kite.routenode import RouteNode
@@ -110,12 +111,16 @@ class Kite:
             else:
                 # maybe the developer wants to stop here
                 # try to return whatever the middleware returns to the client
-                if not isinstance(mw_response, Response):
+                if not isinstance(mw_response, FileResponse) and not isinstance(
+                    mw_response, Response
+                ):
                     mw_response = Response(mw_response)
                 await mw_response.send(send)
                 return
 
         response_body = await handler(req, path_params)
-        if not isinstance(response_body, Response):
+        if not isinstance(response_body, FileResponse) and not isinstance(
+            response_body, Response
+        ):
             response_body = Response(response_body)
         await response_body.send(send)
