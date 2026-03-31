@@ -4,12 +4,13 @@ from urllib.parse import parse_qs
 
 
 class Request:
-    def __init__(self, scope, body: bytes):
+    def __init__(self, scope, body: bytes, path_params: dict={}):
         self.scope = scope
         self.method = scope.get("method", "GET")
         self.path = scope.get("path", "/")
         self.headers = self._parse_headers(scope.get("headers", []))
         self.query_params = self._parse_query_string(scope.get("query_string", b""))
+        self.path_params = path_params
         self._body = body
 
     def _parse_headers(self, raw_headers):

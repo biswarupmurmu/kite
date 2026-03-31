@@ -86,7 +86,7 @@ class Kite:
             await response_body.send(send)
             return
 
-        req = Request(scope, body)
+        req = Request(scope=scope, body=body, path_params=path_params)
         handler = handler_middleware["handler"]
         middleware = handler_middleware["middleware"]
 
