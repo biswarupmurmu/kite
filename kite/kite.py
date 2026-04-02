@@ -1,5 +1,6 @@
 import inspect
 from functools import wraps
+import asyncio
 
 from kite.fileresponse import FileResponse
 from kite.request import Request
@@ -30,7 +31,7 @@ class Kite:
 
                 if inspect.iscoroutinefunction(func):
                     return await func(**func_args)
-                return func(**func_args)
+                return await asyncio.to_thread(func, **func_args)
 
             self.root.register(
                 path=path, method=method, method_handler=handler, middleware=middleware
@@ -102,7 +103,8 @@ class Kite:
             if inspect.iscoroutinefunction(mw):
                 mw_response = await mw(**mw_args)
             else:
-                mw_response = mw(**mw_args)
+                mw_response = await asyncio.to_thread(mw, **mw_args)
+
 
             # updating the req with whatever Request instance the
             # middleware returns
