@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://biswarupmurmu.github.io/kite/</loc>
+         <lastmod>2026-04-02</lastmod>
+    </url>
+    <url>
+         <loc>https://biswarupmurmu.github.io/kite/handlers/</loc>
+         <lastmod>2026-04-02</lastmod>
+    </url>
+    <url>
+         <loc>https://biswarupmurmu.github.io/kite/middleware/</loc>
+         <lastmod>2026-04-02</lastmod>
+    </url>
+    <url>
+         <loc>https://biswarupmurmu.github.io/kite/quickstart/</loc>
+         <lastmod>2026-04-02</lastmod>
+    </url>
+    <url>
+         <loc>https://biswarupmurmu.github.io/kite/requests-responses/</loc>
+         <lastmod>2026-04-02</lastmod>
+    </url>
+    <url>
+         <loc>https://biswarupmurmu.github.io/kite/routing/</loc>
+         <lastmod>2026-04-02</lastmod>
+    </url>
+</urlset>
